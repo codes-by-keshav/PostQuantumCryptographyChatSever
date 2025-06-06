@@ -3,19 +3,21 @@ import oqs
 import threading
 
 HOST = '127.0.0.1'
-PORT = 5555
+PORT1 = 5555  # Peer1's listening port
+PORT2 = 5556  # Peer2's local port
 
-# Setup Dilithium + Kyber keypairs
+# PQC keypairs
 signer = oqs.Signature('Dilithium2')
 sig_pub = signer.generate_keypair()
 
 kem = oqs.KeyEncapsulation('Kyber512')
 kem_pub = kem.generate_keypair()
 
-# Connect to Peer1
+# Connect to Peer1 from PORT2
 s = socket.socket()
-s.connect((HOST, PORT))
-print("[Peer2] Connected to Peer1.")
+s.bind((HOST, PORT2))  # Force use of a different local port
+s.connect((HOST, PORT1))
+print(f"[Peer2] Connected to Peer1 from port {PORT2}")
 
 # Receive Peer1’s public keys
 peer_data = s.recv(4096)
@@ -31,7 +33,7 @@ ct_len = kem.details['length_ciphertext']
 peer_ct = recv[:ct_len]
 peer_sig = recv[ct_len:]
 
-# Verify
+# Verify and decapsulate
 verifier = oqs.Signature('Dilithium2')
 if verifier.verify(peer_ct, peer_sig, peer_sig_pub):
     shared_secret = kem.decap_secret(peer_ct)
@@ -40,13 +42,12 @@ else:
     print("[Peer2] Signature invalid!")
     exit()
 
-# Encapsulate and sign back
+# Encrypt and sign back
 ciphertext, local_secret = kem.encap_secret(peer_kem_pub)
 signature = signer.sign(ciphertext)
 s.sendall(ciphertext + signature)
 
-# --- Chat using XOR with shared secret ---
-
+# XOR encryption demo
 def xor_encrypt(msg, key):
     return bytes([b ^ key[i % len(key)] for i, b in enumerate(msg)])
 
