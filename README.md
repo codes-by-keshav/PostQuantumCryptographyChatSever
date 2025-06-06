@@ -3,6 +3,9 @@
 - It uses the NIST's approved Kyber and Dilithium post quantum cryptography algorithms.
 - Utilizes sockets to communicate between peers.
 
+![Preview Screenshot](https://github.com/user-attachments/assets/60539fa9-5358-4796-b7ca-1b285f44ca3a)
+
+
 ### How to run
 ## Pre-requisites (Windows):
 - Python 3.7 or higher
